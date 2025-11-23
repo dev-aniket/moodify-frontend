@@ -6,27 +6,26 @@ import axios from 'axios'
 export default function Home({ socket }) {
   const navigate = useNavigate();
 
-  // Sample data; later can be replaced by API calls
+  // 1. Define Base URL (uses .env value if available, otherwise defaults to localhost:3002)
+  const MUSIC_URL = import.meta.env.VITE_MUSIC_URL || 'http://localhost:3002';
+
+  // Sample data (will be overwritten by API data)
   const [ musics, setMusics ] = useState(
     [
       { id: 'm1', title: 'Midnight Echoes', artist: 'Alex Wave', coverImageUrl: 'https://via.placeholder.com/300?text=M1' },
       { id: 'm2', title: 'Golden Skies', artist: 'Luna Sun', coverImageUrl: 'https://via.placeholder.com/300?text=M2' },
-      { id: 'm3', title: 'Fading Lights', artist: 'Neon Drift', coverImageUrl: 'https://via.placeholder.com/300?text=M3' },
-      { id: 'm4', title: 'Ocean Drift', artist: 'Deep Current', coverImageUrl: 'https://via.placeholder.com/300?text=M4' },
-      { id: 'm5', title: 'Solstice', artist: 'Alex Wave', coverImageUrl: 'https://via.placeholder.com/300?text=M5' },
-      { id: 'm6', title: 'Night Sparks', artist: 'Luna Sun', coverImageUrl: 'https://via.placeholder.com/300?text=M6' },
+      // ... keep your initial state if you want placeholders while loading
     ]
   )
 
   const [ playlists, setPlaylists ] = useState([
     { id: 'p1', title: 'Chill Vibes', count: 32 },
-    { id: 'p2', title: 'Focus Beats', count: 24 },
-    { id: 'p3', title: 'Acoustic', count: 18 },
-    { id: 'p4', title: 'Late Night', count: 15 },
+    // ... placeholders
   ])
 
   useEffect(() => {
-    axios.get("http://localhost:3002/api/music", { withCredentials: true })
+    // 2. Use the dynamic MUSIC_URL here
+    axios.get(`${MUSIC_URL}/api/music`, { withCredentials: true })
       .then(res => {
         setMusics(res.data.musics.map(m => ({
           id: m._id,
@@ -36,8 +35,10 @@ export default function Home({ socket }) {
           musicUrl: m.musicUrl,
         })))
       })
+      .catch(err => console.error("Error fetching music:", err));
 
-    axios.get("http://localhost:3002/api/music/playlists", { withCredentials: true })
+    // 3. And here
+    axios.get(`${MUSIC_URL}/api/music/playlists`, { withCredentials: true })
       .then(res => {
         setPlaylists(res.data.playlists.map(p => ({
           id: p._id,
@@ -45,6 +46,7 @@ export default function Home({ socket }) {
           count: p.musics.length
         })))
       })
+      .catch(err => console.error("Error fetching playlists:", err));
 
   }, [])
 

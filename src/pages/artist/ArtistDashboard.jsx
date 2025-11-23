@@ -6,6 +6,9 @@ import axios from 'axios'
 export default function ArtistDashboard() {
 
     const navigate = useNavigate();
+
+    // 1. Define Base URL (uses .env value if available, otherwise defaults to localhost:3002)
+    const MUSIC_URL = import.meta.env.VITE_MUSIC_URL || 'http://localhost:3002';
     
     // Unified music objects (could be fetched later)
     const [ musics, setMusics ] = useState([
@@ -48,7 +51,8 @@ export default function ArtistDashboard() {
 
     useEffect(() => {
 
-        axios.get("http://localhost:3002/api/music/artist-musics", {
+        // 2. Use dynamic MUSIC_URL here
+        axios.get(`${MUSIC_URL}/api/music/artist-musics`, {
             withCredentials: true
         })
             .then(res => {
@@ -63,8 +67,10 @@ export default function ArtistDashboard() {
                     released: m.released ? new Date(m.released).toISOString().split('T')[ 0 ] : '2024-01-01'
                 })));
             })
+            .catch(err => console.error("Error fetching artist music:", err));
 
-        axios.get("http://localhost:3002/api/music/playlist/artist", { withCredentials: true })
+        // 3. And here
+        axios.get(`${MUSIC_URL}/api/music/playlist/artist`, { withCredentials: true })
             .then(res => {
                 setPlaylists(res.data.playlists.map(p => ({
                     id: p._id,
@@ -75,9 +81,10 @@ export default function ArtistDashboard() {
                     musics: p.musics || []
                 })));
             })
+            .catch(err => console.error("Error fetching playlists:", err));
 
 
-    },[])
+    }, []) // Removed dependency on MUSIC_URL to prevent infinite loop if it changes
 
     const musicMap = Object.fromEntries(musics.map(m => [ m.id, m ]))
 

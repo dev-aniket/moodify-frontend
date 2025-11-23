@@ -7,6 +7,9 @@ export default function UploadMusic() {
 
     const navigate = useNavigate();
 
+    // 1. Define Base URL (uses .env value if available, otherwise defaults to localhost:3002)
+    const MUSIC_URL = import.meta.env.VITE_MUSIC_URL || 'http://localhost:3002';
+
     const [ form, setForm ] = useState({
         title: '',
         coverImage: null,
@@ -72,14 +75,20 @@ export default function UploadMusic() {
             formData.append('music', form.music)
         }
 
-        axios.post("http://localhost:3002/api/music/upload", formData, {
+        // 2. Use the dynamic MUSIC_URL here
+        axios.post(`${MUSIC_URL}/api/music/upload`, formData, {
             withCredentials: true,
+            // Optional: Headers for file upload are usually handled automatically by axios with FormData,
+            // but explicit content-type doesn't hurt.
+            headers: { "Content-Type": "multipart/form-data" } 
         })
             .then(() => {
                 navigate('/artist/dashboard');
              })
-
-        // UI only – integrate API/upload logic later.
+            .catch((err) => {
+                console.error("Upload failed:", err);
+                alert("Upload failed. Check console for details.");
+            });
     }
 
     return (

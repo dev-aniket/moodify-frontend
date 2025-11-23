@@ -6,6 +6,9 @@ import { useNavigate } from 'react-router-dom'
 export default function Login() {
     const navigate = useNavigate();
 
+    // 1. Define Base URL (uses .env value if available, otherwise localhost)
+    const AUTH_URL = import.meta.env.VITE_AUTH_URL || 'http://localhost:3000';
+
     const [ form, setForm ] = useState({
         email: '',
         password: '',
@@ -20,7 +23,8 @@ export default function Login() {
         e.preventDefault()
 
         try {
-            axios.post("http://localhost:3000/api/auth/login", {
+            // 2. Use the dynamic AUTH_URL variable here
+            axios.post(`${AUTH_URL}/api/auth/login`, {
                 email: form.email,
                 password: form.password
             }, {
@@ -43,7 +47,8 @@ export default function Login() {
 
                 <button 
                 onClick={()=>{
-                    window.location.href = 'http://localhost:3000/api/auth/google';
+                    // 3. Update Google Login redirect to use the dynamic URL
+                    window.location.href = `${AUTH_URL}/api/auth/google`;
                 }}
                 type="button" className="btn btn-google" aria-label="Continue with Google">
                     <span className="btn-google-icon" aria-hidden>G</span>

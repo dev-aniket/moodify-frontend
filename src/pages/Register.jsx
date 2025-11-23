@@ -4,11 +4,12 @@ import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
 
 export default function Register() {
-
-
     const navigate = useNavigate();
 
-    // Local UI state only (no API calls as requested)
+
+    // It tries to find the Vercel/Render link first. If missing, it uses localhost.
+    const AUTH_URL = import.meta.env.VITE_AUTH_URL || 'http://localhost:3000';
+
     const [ form, setForm ] = useState({
         email: '',
         firstName: '',
@@ -25,8 +26,8 @@ export default function Register() {
     async function handleSubmit(e) {
         e.preventDefault()
         try {
-
-            await axios.post("http://localhost:3000/api/auth/register", {
+            // 2. Use backticks (`) and ${AUTH_URL} for the API call
+            await axios.post(`${AUTH_URL}/api/auth/register`, {
                 email: form.email,
                 fullname: {
                     firstName: form.firstName,
@@ -55,13 +56,16 @@ export default function Register() {
                 
                 <button
                     onClick={() => {
-                        window.location.href = 'http://localhost:3000/api/auth/google';
+                        // 3. Update the Google Login URL as well
+                        window.location.href = `${AUTH_URL}/api/auth/google`;
                     }}
                     type="button" className="btn btn-google" aria-label="Continue with Google">
                     <span className="btn-google-icon" aria-hidden>G</span>
                     Continue with Google
                 </button>
 
+                {/* ... Rest of your JSX remains exactly the same ... */}
+                
                 <div className="divider" role="separator" aria-label="or continue with email">
                     <span className="divider-line" />
                     <span className="divider-text">or</span>
@@ -69,6 +73,10 @@ export default function Register() {
                 </div>
 
                 <form className="register-form stack" onSubmit={handleSubmit} noValidate>
+                    {/* ... Inputs remain the same ... */}
+                    
+                    {/* (I am skipping the inputs here to save space, do not delete them in your file) */}
+
                     <div className="field-group">
                         <label htmlFor="email">Email</label>
                         <input
@@ -83,6 +91,8 @@ export default function Register() {
                         />
                     </div>
 
+                   {/* ... Keep the rest of your form exactly as it was ... */}
+                   
                     <div className="field-row">
                         <div className="field-group">
                             <label htmlFor="firstName">First name</label>

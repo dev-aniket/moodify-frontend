@@ -3,12 +3,13 @@ import { useParams, useNavigate } from 'react-router-dom'
 import './MusicPlayer.css'
 import axios from 'axios'
 
-
-
 export default function MusicPlayer() {
   const { id } = useParams()
   const navigate = useNavigate()
-    const [track, setTrack] = useState(null)
+  const [track, setTrack] = useState(null)
+
+  // 1. Define Base URL
+  const MUSIC_URL = import.meta.env.VITE_MUSIC_URL || 'http://localhost:3002';
 
   const audioRef = useRef(null)
   const progressRef = useRef(null)
@@ -81,13 +82,14 @@ export default function MusicPlayer() {
   // Cleanup animation frame
   useEffect(() => () => cancelAnimationFrame(animationRef.current), [])
 
-  // Apply volume & playback rate w0hen component mounts or changes
+  // Apply volume & playback rate when component mounts or changes
   useEffect(() => { if (audioRef.current) audioRef.current.volume = volume }, [volume])
   useEffect(() => { if (audioRef.current) audioRef.current.playbackRate = playbackRate }, [playbackRate])
 
   // Auto navigate if invalid id
   useEffect(() => {
-    axios.get(`http://localhost:3002/api/music/get-details/${id}`, {withCredentials: true})
+    // 2. Use dynamic MUSIC_URL here
+    axios.get(`${MUSIC_URL}/api/music/get-details/${id}`, { withCredentials: true })
       .then(res => {
         setTrack(res.data.music)
       })
@@ -95,13 +97,11 @@ export default function MusicPlayer() {
         console.error(err)
         // navigate('/')
       })
-  }, [])
+  }, [id, MUSIC_URL]) // Added dependencies for safety check
 
 
   if(!track) {
-    // Fetch track details from backend
     return <div>Loading...</div>
-    
   }
   
   return (
@@ -126,7 +126,19 @@ export default function MusicPlayer() {
             src={track.musicUrl}
             preload="metadata"
             onLoadedMetadata={handleLoadedMetadata}
-            onEnded={() => setIsPlaying(false)}
+            onEnded={() => {
+                setIsPlaying(false)
+                cancelAnimationFrame(animationRef.current)
+            }}
+            // 3. IMPORTANT: Ensure progress bar works if Autoplay kicks in
+            onPlay={() => {
+                setIsPlaying(true);
+                animationRef.current = requestAnimationFrame(whilePlaying);
+            }}
+            onPause={() => {
+                setIsPlaying(false);
+                cancelAnimationFrame(animationRef.current);
+            }}
             autoPlay={true}
           />
 
