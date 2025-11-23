@@ -1,0 +1,198 @@
+.upload-music-page {
+    width: 100%;
+}
+
+.upload-header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.upload-title {
+    margin: 0;
+    font-size: var(--font-size-xl);
+}
+
+.upload-sub {
+    margin: 0;
+    font-size: var(--font-size-sm);
+}
+
+.upload-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    padding: var(--space-6);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+}
+
+.form-grid {
+    display: grid;
+    gap: var(--space-5);
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.field-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.field-group label {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+}
+
+.field-group input[type='text'] {
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface-alt);
+    color: var(--color-text);
+    font: inherit;
+}
+
+.field-group input[type='text']:focus {
+    outline: none;
+    border-color: var(--color-brand-500);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-brand-500) 55%, transparent);
+}
+
+/* File inputs */
+.file-field input[type='file'] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.file-input-wrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.field-group:has(input[type='file']) label {
+    align-self: center;
+    content: 'Choose File';
+    padding: var(--space-2) var(--space-4);
+    background: var(--color-surface-alt);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    color: var(--color-text);
+    width: fit-content;
+    transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+
+.file-meta {
+    font-size: var(--font-size-xs);
+}
+
+/* Preview area */
+.preview-area {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-6);
+}
+
+.cover-preview {
+    width: 160px;
+}
+
+.cover-img {
+    width: 100%;
+    border-radius: var(--radius-md);
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface-alt);
+}
+
+.audio-preview audio {
+    width: 280px;
+    max-width: 100%;
+}
+
+/* Media card enhancements */
+.media-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface-alt);
+    max-width: 280px;
+    position: relative;
+}
+
+.media-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.media-title {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+}
+
+.media-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: var(--font-size-xs);
+}
+
+.remove-btn {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+}
+
+.remove-btn:hover {
+    background: var(--color-surface);
+    box-shadow: var(--shadow-xs);
+}
+
+.audio-preview.media-card {
+    max-width: 420px;
+}
+
+.audio-preview.media-card audio {
+    width: 100%;
+}
+
+.actions {
+    display: flex;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+    .upload-form {
+        padding: var(--space-5);
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .actions .btn {
+        width: 100%;
+    }
+
+    .media-card {
+        max-width: 100%;
+    }
+}

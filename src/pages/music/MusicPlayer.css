@@ -1,0 +1,134 @@
+.music-player-page {
+    width: 100%;
+}
+
+.player-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+}
+
+.player-title {
+    margin: 0;
+    font-size: var(--font-size-xl);
+}
+
+.player-layout {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: var(--space-8);
+    align-items: flex-start;
+}
+
+.cover-pane {
+    position: sticky;
+    top: var(--space-6);
+}
+
+.player-cover {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+    background: var(--color-surface-alt);
+}
+
+.controls-pane {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    padding: var(--space-6);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+}
+
+.track-meta {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.track-name {
+    margin: 0;
+    font-size: var(--font-size-lg);
+}
+
+.track-artist {
+    margin: 0;
+    font-size: var(--font-size-sm);
+}
+
+.transport {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.time-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    font-size: var(--font-size-xs);
+}
+
+.time-current,
+.time-total {
+    width: 40px;
+    text-align: center;
+}
+
+.progress-bar {
+    flex: 1;
+    cursor: pointer;
+}
+
+.buttons-row {
+    display: flex;
+    gap: var(--space-3);
+    align-items: center;
+}
+
+.sliders {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-8);
+}
+
+.slider-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    min-width: 180px;
+}
+
+.slider-label {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+}
+
+.slider-group input[type='range'] {
+    width: 100%;
+    cursor: pointer;
+}
+
+@media (max-width: 980px) {
+    .player-layout {
+        grid-template-columns: 280px 1fr;
+        gap: var(--space-6);
+    }
+}
+
+@media (max-width: 760px) {
+    .player-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .cover-pane {
+        position: static;
+    }
+
+    .controls-pane {
+        padding: var(--space-5);
+    }
+}

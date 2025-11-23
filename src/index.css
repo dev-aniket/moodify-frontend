@@ -1,0 +1,23 @@
+/* Base resets & structural layout that complement theme tokens */
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+#root { width: 100%; }
+
+a { text-decoration: none; }
+
+/* Utility override for centering previous demo layout */
+body { display: flex; place-items: flex-start; justify-content: center; padding: var(--space-8) var(--space-4); }
+
+h1 { font-size: var(--font-size-2xl); }
+
+/* Remove default focus outline gap on links if needed */
+a:focus-visible { outline: 2px solid var(--color-focus-ring); outline-offset: 2px; }

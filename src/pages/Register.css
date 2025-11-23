@@ -1,0 +1,91 @@
+.register-wrapper {
+  max-width: 560px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.register-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.register-title { margin: 0; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  text-align: center;
+}
+
+
+.btn-google {
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+.btn-google:hover { background: var(--color-surface-alt); box-shadow: var(--shadow-xs); }
+.btn-google-icon {
+  background: #fff;
+  color: #4285f4;
+  font-weight: var(--font-weight-bold);
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.07), var(--shadow-xs);
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+.divider-line { flex: 1; height: 1px; background: var(--color-border); }
+.divider-text { text-transform: lowercase; letter-spacing: 0.5px; }
+
+.register-form { width: 100%; }
+
+.field-group { display: flex; flex-direction: column; gap: var(--space-2); }
+.field-row { display: flex; gap: var(--space-4); flex-wrap: wrap; }
+.field-row .field-group { flex: 1 1 200px; }
+
+label { font-size: var(--font-size-sm); font-weight: var(--font-weight-medium); }
+
+input[type='text'],
+input[type='email'],
+input[type='password'] {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  font: inherit;
+  transition: border-color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast);
+}
+input:focus { outline: none; border-color: var(--color-brand-500); box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-brand-500) 50%, transparent); }
+input::placeholder { color: var(--color-text-muted); }
+
+.hint { margin: 0; font-size: var(--font-size-xs); }
+
+/* Radio group */
+.fieldset-radio { border: none; padding: 0; margin: 0; }
+.legend { font-size: var(--font-size-sm); font-weight: var(--font-weight-medium); margin-bottom: var(--space-2); }
+.radio-row { display: flex; gap: var(--space-4); flex-wrap: wrap; }
+.radio-option { display: inline-flex; align-items: center; gap: var(--space-2); cursor: pointer; font-size: var(--font-size-sm); }
+.radio-option input[type='radio'] { accent-color: var(--color-brand-600); cursor: pointer; }
+
+
+@media (max-width: 520px) {
+  .register-card { padding: var(--space-5); }
+  .field-row { flex-direction: column; }
+}
