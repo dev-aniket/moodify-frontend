@@ -1,4 +1,4 @@
-import { Routes, Route, Link, NavLink } from 'react-router-dom'
+import { Routes, Route } from 'react-router-dom'
 import './App.css'
 import { useState, useEffect } from 'react'
 import Home from './pages/Home'
@@ -12,12 +12,17 @@ import { io } from 'socket.io-client'
 
 function App() {
 
-    const [ socket, setSocket ] = useState(null)
+  const [ socket, setSocket ] = useState(null)
 
   useEffect(() => {
+    // 1. Use the dynamic variable (Production Safe)
+    const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:3002";
 
-    const newSocket = io("localhost:3002", {
+    // 2. Add 'transports' to force Websockets (Critical for Render)
+    const newSocket = io(SOCKET_URL, {
       withCredentials: true,
+      transports: ["websocket"], 
+      autoConnect: true
     })
 
     setSocket(newSocket)
@@ -27,9 +32,12 @@ function App() {
       window.location.href = `/music/${musicId}`
     })
 
+    // 3. Cleanup: Disconnect socket when component unmounts
+    return () => {
+      newSocket.disconnect();
+    }
+
   }, [])
-
-
 
   return (
     <div>
@@ -44,7 +52,6 @@ function App() {
         </Routes>
       </main>
     </div>
-
   )
 }
 
