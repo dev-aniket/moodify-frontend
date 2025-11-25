@@ -6,23 +6,20 @@ import axios from 'axios'
 export default function UploadMusic() {
 
     const navigate = useNavigate();
-
-    // 1. Define Base URL (uses .env value if available, otherwise defaults to localhost:3002)
     const MUSIC_URL = import.meta.env.VITE_MUSIC_URL || 'http://localhost:3002';
 
     const [ form, setForm ] = useState({
         title: '',
+        mood: 'neutral', // Default mood
         coverImage: null,
         music: null,
     })
 
-    // Previews & metadata
-    const [ coverPreview, setCoverPreview ] = useState(null) // object URL
-    const [ musicPreview, setMusicPreview ] = useState(null) // object URL
+    const [ coverPreview, setCoverPreview ] = useState(null)
+    const [ musicPreview, setMusicPreview ] = useState(null)
     const [ musicDuration, setMusicDuration ] = useState(null)
     const audioRef = useRef(null)
 
-    // Create / revoke object URLs when files change
     useEffect(() => {
         if (form.coverImage) {
             const url = URL.createObjectURL(form.coverImage)
@@ -44,7 +41,6 @@ export default function UploadMusic() {
         }
     }, [ form.music ])
 
-    // Extract audio duration when metadata loads
     function handleAudioLoaded() {
         if (audioRef.current?.duration) {
             const d = audioRef.current.duration
@@ -68,18 +64,13 @@ export default function UploadMusic() {
 
         const formData = new FormData()
         formData.append('title', form.title)
-        if (form.coverImage) {
-            formData.append('coverImage', form.coverImage)
-        }
-        if (form.music) {
-            formData.append('music', form.music)
-        }
+        formData.append('mood', form.mood) // Send mood to backend
+        
+        if (form.coverImage) formData.append('coverImage', form.coverImage)
+        if (form.music) formData.append('music', form.music)
 
-        // 2. Use the dynamic MUSIC_URL here
         axios.post(`${MUSIC_URL}/api/music/upload`, formData, {
             withCredentials: true,
-            // Optional: Headers for file upload are usually handled automatically by axios with FormData,
-            // but explicit content-type doesn't hurt.
             headers: { "Content-Type": "multipart/form-data" } 
         })
             .then(() => {
@@ -111,6 +102,24 @@ export default function UploadMusic() {
                             required
                             placeholder="Song title"
                         />
+                    </div>
+
+                    {/* --- NEW MOOD SELECTOR --- */}
+                    <div className="field-group">
+                        <label htmlFor="mood">Mood</label>
+                        <select
+                            id="mood"
+                            name="mood"
+                            value={form.mood}
+                            onChange={handleChange}
+                            className="mood-input"
+                            style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--color-border)', background: 'var(--color-surface)', color: 'white' }}
+                        >
+                            <option value="neutral">Neutral</option>
+                            <option value="happy">Happy</option>
+                            <option value="sad">Sad</option>
+                            <option value="angry">Angry</option>
+                        </select>
                     </div>
 
                     <div className="field-group file-field">
@@ -153,16 +162,7 @@ export default function UploadMusic() {
                                 <strong className="media-title">Cover Image</strong>
                                 <button type="button" className="btn btn-small remove-btn" onClick={() => removeFile('coverImage')}>Remove</button>
                             </div>
-                            <img
-                                src={coverPreview}
-                                alt="Cover preview"
-                                className="cover-img"
-                            />
-                            <div className="media-meta text-muted">
-                                <span>{form.coverImage.name}</span>
-                                <span>{(form.coverImage.size / 1024).toFixed(1)} KB</span>
-                                <span>{form.coverImage.type}</span>
-                            </div>
+                            <img src={coverPreview} alt="Cover preview" className="cover-img" />
                         </div>
                     )}
                     {form.music && musicPreview && (
@@ -172,19 +172,13 @@ export default function UploadMusic() {
                                 <button type="button" className="btn btn-small remove-btn" onClick={() => removeFile('music')}>Remove</button>
                             </div>
                             <audio ref={audioRef} controls src={musicPreview} onLoadedMetadata={handleAudioLoaded} />
-                            <div className="media-meta text-muted">
-                                <span>{form.music.name}</span>
-                                <span>{(form.music.size / 1024).toFixed(1)} KB</span>
-                                {musicDuration && <span>Duration: {musicDuration}</span>}
-                                <span>{form.music.type}</span>
-                            </div>
                         </div>
                     )}
                 </div>
 
                 <div className="actions">
                     <button type="submit" className="btn btn-primary">Upload</button>
-                    <button type="reset" className="btn" onClick={() => setForm({ title: '', coverImage: null, music: null })}>Reset</button>
+                    <button type="reset" className="btn" onClick={() => setForm({ title: '', mood: 'neutral', coverImage: null, music: null })}>Reset</button>
                 </div>
             </form>
         </div>
