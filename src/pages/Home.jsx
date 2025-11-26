@@ -59,6 +59,7 @@ export default function Home({ socket }) {
     setLoadingMoods(true);
     axios.get(`${MUSIC_URL}/api/music/spotify/home`, { withCredentials: true })
         .then(res => {
+            console.log("📦 FRONTEND RECEIVED SPOTIFY DATA:", res.data); // <--- LOOK FOR THIS IN CHROME CONSOLE
             setMoodSections({
                 happy: res.data.happy,
                 sad: res.data.sad,
