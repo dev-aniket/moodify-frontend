@@ -74,32 +74,22 @@ export default function Home({ socket }) {
         });
   }, []);
 
-  // 3. Playback Logic
+
+
   const handleCardClick = (m) => {
-    // Case A: Local DB Music -> Go to full player
-    if (m.source === 'db') {
-        // Stop any preview if running
-        audioRef.current.pause(); 
+    // 1. Stop any background preview audio if it was running
+    if (audioRef.current) {
+        audioRef.current.pause();
         setPlayingPreview(null);
-        
-        socket?.emit("play", { musicId: m.id });
-        navigate(`/music/${m.id}`);
-        return;
     }
 
-    // Case B: Spotify Preview
-    if (m.source === 'spotify') {
-        if (playingPreview === m.id) {
-            // Pause if already playing
-            audioRef.current.pause();
-            setPlayingPreview(null);
-        } else {
-            // Play new track
-            audioRef.current.src = m.musicUrl;
-            audioRef.current.play();
-            setPlayingPreview(m.id);
-        }
-    }
+    
+    socket?.emit("play", { musicId: m.id });
+
+  
+    navigate(`/music/${m.id}`, { 
+        state: { trackData: m } 
+    });
   };
 
   // Reusable Section Component

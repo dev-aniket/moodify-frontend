@@ -1,27 +1,26 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom' // Added useLocation
 import './MusicPlayer.css'
 import axios from 'axios'
 
 export default function MusicPlayer() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const location = useLocation() // To access the passed state
+  
   const [track, setTrack] = useState(null)
-
-  // 1. Define Base URL
   const MUSIC_URL = import.meta.env.VITE_MUSIC_URL || 'http://localhost:3002';
 
   const audioRef = useRef(null)
   const progressRef = useRef(null)
   const animationRef = useRef(null)
 
-  const [isPlaying, setIsPlaying] = useState(true)
+  const [isPlaying, setIsPlaying] = useState(false) // Start paused to let audio load
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
   const [volume, setVolume] = useState(0.9)
   const [playbackRate, setPlaybackRate] = useState(1)
 
-  // Format time helper
   const formatTime = useCallback((s) => {
     if (!Number.isFinite(s)) return '0:00'
     const mins = Math.floor(s / 60)
@@ -29,10 +28,43 @@ export default function MusicPlayer() {
     return `${mins}:${secs}`
   }, [])
 
-  // Load metadata
+  // --- CHANGED: Load Data Strategy ---
+  useEffect(() => {
+    // 1. Check if data was passed via Router State (Instant Load)
+    if (location.state?.trackData) {
+        console.log("Using passed track data:", location.state.trackData);
+        setTrack(location.state.trackData);
+        return;
+    }
+
+    // 2. If no state (e.g. direct link), fetch from DB
+    // NOTE: This will fail for Spotify IDs if user reloads page directly.
+    // To fix that fully, you'd need a backend endpoint to fetch Spotify details by ID.
+    // For now, this handles the DB case perfectly.
+    console.log("Fetching track from DB...");
+    axios.get(`${MUSIC_URL}/api/music/get-details/${id}`, { withCredentials: true })
+      .then(res => {
+        setTrack(res.data.music)
+      })
+      .catch(err => {
+        console.error("Error loading track:", err)
+        alert("Could not load track. It might be a Spotify preview that requires navigation from Home.");
+        navigate('/'); 
+      })
+  }, [id, MUSIC_URL, location.state, navigate])
+
+
+  // --- AUDIO HANDLERS ---
+  
   function handleLoadedMetadata() {
     const d = audioRef.current?.duration
     if (d) setDuration(d)
+    // Auto-play once loaded
+    if(audioRef.current) {
+        audioRef.current.play()
+            .then(() => setIsPlaying(true))
+            .catch(e => console.log("Autoplay blocked:", e));
+    }
   }
 
   function togglePlay() {
@@ -82,26 +114,21 @@ export default function MusicPlayer() {
   // Cleanup animation frame
   useEffect(() => () => cancelAnimationFrame(animationRef.current), [])
 
-  // Apply volume & playback rate when component mounts or changes
+  // Apply volume & playback rate
   useEffect(() => { if (audioRef.current) audioRef.current.volume = volume }, [volume])
   useEffect(() => { if (audioRef.current) audioRef.current.playbackRate = playbackRate }, [playbackRate])
 
-  // Auto navigate if invalid id
+  // Update progress bar while playing
   useEffect(() => {
-    // 2. Use dynamic MUSIC_URL here
-    axios.get(`${MUSIC_URL}/api/music/get-details/${id}`, { withCredentials: true })
-      .then(res => {
-        setTrack(res.data.music)
-      })
-      .catch(err => {
-        console.error(err)
-        // navigate('/')
-      })
-  }, [id, MUSIC_URL]) // Added dependencies for safety check
+      if(isPlaying) {
+          animationRef.current = requestAnimationFrame(whilePlaying);
+      }
+      return () => cancelAnimationFrame(animationRef.current);
+  }, [isPlaying]);
 
 
   if(!track) {
-    return <div>Loading...</div>
+    return <div style={{padding: '2rem', color: 'white'}}>Loading Player...</div>
   }
   
   return (
@@ -119,6 +146,8 @@ export default function MusicPlayer() {
           <div className="track-meta">
             <h2 className="track-name">{track.title}</h2>
             <p className="track-artist text-muted">{track.artist}</p>
+            {/* Show badge if Spotify */}
+            {track.source === 'spotify' && <span style={{fontSize: '12px', color: '#1DB954', marginTop: '4px'}}>Spotify Preview (30s)</span>}
           </div>
 
           <audio
@@ -130,16 +159,8 @@ export default function MusicPlayer() {
                 setIsPlaying(false)
                 cancelAnimationFrame(animationRef.current)
             }}
-            // 3. IMPORTANT: Ensure progress bar works if Autoplay kicks in
-            onPlay={() => {
-                setIsPlaying(true);
-                animationRef.current = requestAnimationFrame(whilePlaying);
-            }}
-            onPause={() => {
-                setIsPlaying(false);
-                cancelAnimationFrame(animationRef.current);
-            }}
-            autoPlay={true}
+            onPlay={() => setIsPlaying(true)}
+            onPause={() => setIsPlaying(false)}
           />
 
           <div className="transport">
