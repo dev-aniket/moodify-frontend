@@ -20,8 +20,13 @@ export default function MusicPlayer() {
   const [duration, setDuration] = useState(0)
   const [volume, setVolume] = useState(0.9)
   const [playbackRate, setPlaybackRate] = useState(1)
+  const [error, setError] = useState(null)
   
-  // New State: Determine if we should use the Embed Player
+  // Playlist State
+  const [showPlaylistModal, setShowPlaylistModal] = useState(false);
+  const [newPlaylistName, setNewPlaylistName] = useState("");
+  
+  // Logic State
   const [useEmbed, setUseEmbed] = useState(false);
 
   const formatTime = useCallback((s) => {
@@ -36,7 +41,6 @@ export default function MusicPlayer() {
     if (location.state?.trackData) {
         const t = location.state.trackData;
         setTrack(t);
-        
         // CHECK: If it's Spotify and has no MP3, use Embed
         if (t.source === 'spotify' && !t.musicUrl) {
             setUseEmbed(true);
@@ -46,11 +50,10 @@ export default function MusicPlayer() {
         return;
     }
 
-    // Fallback: Fetch from DB (Only for local songs)
     axios.get(`${MUSIC_URL}/api/music/get-details/${id}`, { withCredentials: true })
       .then(res => {
         setTrack(res.data.music);
-        setUseEmbed(false); // DB songs always have audio
+        setUseEmbed(false); 
       })
       .catch(err => {
         console.error(err)
@@ -59,7 +62,28 @@ export default function MusicPlayer() {
   }, [id, MUSIC_URL, location.state, navigate])
 
 
-  // --- CUSTOM PLAYER LOGIC (Only runs if useEmbed is false) ---
+  // 2. Playlist Logic (UPDATED)
+  const handleAddToPlaylist = async () => {
+      if(!newPlaylistName) return alert("Please enter a name");
+      
+      try {
+          // We now send the FULL track object, so the backend can save Spotify details directly
+          await axios.post(`${MUSIC_URL}/api/music/playlist`, {
+              title: newPlaylistName,
+              songs: [track] // Send the whole track object, not just ID
+          }, { withCredentials: true });
+          
+          alert("Playlist created!");
+          setShowPlaylistModal(false);
+          setNewPlaylistName("");
+      } catch (err) {
+          console.error(err);
+          alert("Failed to create playlist.");
+      }
+  }
+
+
+  // 3. Audio Handlers
   const safePlay = async () => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -137,10 +161,15 @@ export default function MusicPlayer() {
             <p className="track-artist text-muted">{track.artist}</p>
           </div>
 
-          {/* --- SWITCHER: EMBED VS CUSTOM PLAYER --- */}
-          
+          {/* --- ADD TO PLAYLIST BUTTON (NOW VISIBLE FOR ALL) --- */}
+          <div style={{marginBottom: '15px', display:'flex', justifyContent:'center'}}>
+                 <button className="btn btn-small" onClick={() => setShowPlaylistModal(true)}>
+                     + Add to Playlist
+                 </button>
+          </div>
+
+          {/* --- SWITCHER --- */}
           {useEmbed ? (
-             // OPTION A: OFFICIAL SPOTIFY WIDGET
              <div className="spotify-embed-wrapper" style={{marginTop: '20px'}}>
                  <iframe 
                     style={{borderRadius: '12px'}} 
@@ -152,12 +181,26 @@ export default function MusicPlayer() {
                     allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
                     loading="lazy">
                 </iframe>
-                <p style={{fontSize:'12px', color:'#888', marginTop:'10px', textAlign:'center'}}>
-                    Playing via Spotify (Preview or Full if logged in)
-                </p>
+                
+                {/* ERROR MESSAGE UI */}
+                {error && (
+                    <div style={{marginTop: '10px', textAlign:'center'}}>
+                        <p style={{color: '#ff4d4d', fontSize:'12px', marginBottom: '5px'}}>{error}</p>
+                        {track.externalUrl && (
+                            <a 
+                                href={track.externalUrl} 
+                                target="_blank" 
+                                rel="noreferrer"
+                                className="btn btn-small"
+                                style={{background: '#1DB954', color: 'white', textDecoration: 'none', display: 'inline-block', fontSize:'12px'}}
+                            >
+                                Open in Spotify App
+                            </a>
+                        )}
+                    </div>
+                )}
              </div>
           ) : (
-             // OPTION B: YOUR CUSTOM PLAYER (For Local Songs)
              <>
                 {track.musicUrl && (
                     <audio
@@ -206,6 +249,36 @@ export default function MusicPlayer() {
                     </div>
                 </div>
              </>
+          )}
+
+          {/* --- PLAYLIST MODAL --- */}
+          {showPlaylistModal && (
+              <div className="modal-overlay" style={{
+                  position:'fixed', top:0, left:0, right:0, bottom:0, 
+                  background:'rgba(0,0,0,0.8)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000
+              }}>
+                  <div className="modal-content surface" style={{padding:'24px', borderRadius:'12px', width:'320px', border:'1px solid var(--color-border)'}}>
+                      <h3 style={{marginTop:0}}>Create New Playlist</h3>
+                      <p style={{fontSize:'14px', color:'#ccc'}}>Add <strong>{track.title}</strong> to:</p>
+                      
+                      <input 
+                          type="text" 
+                          placeholder="My Awesome Playlist" 
+                          value={newPlaylistName}
+                          onChange={e => setNewPlaylistName(e.target.value)}
+                          style={{
+                              width:'100%', padding:'12px', marginTop:'10px', marginBottom:'20px', 
+                              borderRadius:'8px', border:'1px solid var(--color-border)', 
+                              background:'var(--color-surface-alt)', color:'white'
+                          }}
+                      />
+                      
+                      <div style={{display:'flex', gap:'10px', justifyContent:'flex-end'}}>
+                          <button className="btn btn-small" onClick={() => setShowPlaylistModal(false)}>Cancel</button>
+                          <button className="btn btn-primary" onClick={handleAddToPlaylist}>Create Playlist</button>
+                      </div>
+                  </div>
+              </div>
           )}
 
         </div>

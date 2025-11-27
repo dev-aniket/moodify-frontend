@@ -8,28 +8,53 @@ export default function Home({ socket }) {
   const MUSIC_URL = import.meta.env.VITE_MUSIC_URL || 'http://localhost:3002';
 
   // Data State
-  const [musics, setMusics] = useState([]) // Local DB music
-  const [moodSections, setMoodSections] = useState({ happy: [], sad: [], angry: [], neutral: [] }) // Spotify Music
+  const [musics, setMusics] = useState([]) 
+  const [moodSections, setMoodSections] = useState({ happy: [], sad: [], angry: [], neutral: [] }) 
   const [playlists, setPlaylists] = useState([])
   
   // UI State
   const [selectedFilter, setSelectedFilter] = useState('all'); 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [username, setUsername] = useState(""); // Store the real name
   const [loadingMoods, setLoadingMoods] = useState(false);
 
-  // Audio State for Previews
-  const [playingPreview, setPlayingPreview] = useState(null); // ID of currently playing track
-  const audioRef = useRef(new Audio()); // Hidden audio element
+  // Audio State
+  const [playingPreview, setPlayingPreview] = useState(null); 
+  const audioRef = useRef(new Audio()); 
 
-  // 1. Auth Check
+  // 1. AUTH CHECK (The Fix)
   useEffect(() => {
-    const token = document.cookie.split('; ').find(row => row.startsWith('token='));
-    if (token) setIsLoggedIn(true);
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+        try {
+            const user = JSON.parse(userStr);
+            setIsLoggedIn(true);
+            // Get the first name from the stored user object
+            if (user.fullname && user.fullname.firstName) {
+                setUsername(user.fullname.firstName);
+            } else {
+                setUsername("User");
+            }
+        } catch (e) {
+            console.error("Failed to parse user data", e);
+            setIsLoggedIn(false);
+        }
+    }
   }, []);
 
-  // 2. Fetch Data
+  // 2. LOGOUT FUNCTION
+  const handleLogout = () => {
+      // Clear storage
+      localStorage.removeItem('user');
+      // Clear cookie (by calling backend logout endpoint if you have one, or just client side clearing)
+      document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      setIsLoggedIn(false);
+      navigate('/login');
+  }
+
+  // 3. Fetch Data
   useEffect(() => {
-    // 2a. Fetch Local DB Music
+    // Fetch Local DB Music
     axios.get(`${MUSIC_URL}/api/music`, { withCredentials: true })
       .then(res => {
         setMusics(res.data.musics.map(m => ({
@@ -44,7 +69,7 @@ export default function Home({ socket }) {
       })
       .catch(err => console.error("Error fetching music:", err));
 
-    // 2b. Fetch Playlists
+    // Fetch Playlists
     axios.get(`${MUSIC_URL}/api/music/playlists`, { withCredentials: true })
       .then(res => {
         setPlaylists(res.data.playlists.map(p => ({
@@ -55,11 +80,10 @@ export default function Home({ socket }) {
       })
       .catch(err => console.error("Error fetching playlists:", err));
 
-    // 2c. Fetch Spotify Moods
+    // Fetch Spotify Moods
     setLoadingMoods(true);
     axios.get(`${MUSIC_URL}/api/music/spotify/home`, { withCredentials: true })
         .then(res => {
-            console.log("📦 FRONTEND RECEIVED SPOTIFY DATA:", res.data); // <--- LOOK FOR THIS IN CHROME CONSOLE
             setMoodSections({
                 happy: res.data.happy,
                 sad: res.data.sad,
@@ -72,27 +96,22 @@ export default function Home({ socket }) {
             console.error("Error fetching spotify moods:", err);
             setLoadingMoods(false);
         });
-  }, []);
-
+  }, [MUSIC_URL]);
 
 
   const handleCardClick = (m) => {
-    // 1. Stop any background preview audio if it was running
     if (audioRef.current) {
         audioRef.current.pause();
         setPlayingPreview(null);
     }
-
-    
     socket?.emit("play", { musicId: m.id });
-
-  
-    navigate(`/music/${m.id}`, { 
-        state: { trackData: m } 
-    });
+    navigate(`/music/${m.id}`, { state: { trackData: m } });
   };
 
-  // Reusable Section Component
+  const handlePlaylistClick = (playlistId) => {
+      navigate(`/playlist/${playlistId}`);
+  }
+
   const MusicSection = ({ title, items }) => {
     if (!items || items.length === 0) return null;
     return (
@@ -105,27 +124,24 @@ export default function Home({ socket }) {
             <div
               onClick={() => handleCardClick(m)}
               key={m.id} 
-              className={`music-card surface ${playingPreview === m.id ? 'is-playing' : ''}`} 
+              className="music-card surface"
               tabIndex={0}
-              style={{ borderColor: playingPreview === m.id ? 'var(--color-primary)' : '' }}
             >
               <div className="music-cover-wrap">
                 <img src={m.coverImageUrl} alt="" className="music-cover" />
-                {/* Overlay Icon for Spotify Tracks */}
                 {m.source === 'spotify' && (
                     <div style={{
-                        position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.3)', 
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        opacity: playingPreview === m.id ? 1 : 0, transition: 'opacity 0.2s'
-                    }} className="play-overlay">
-                        <span style={{ fontSize: '24px' }}>{playingPreview === m.id ? '⏸' : '▶'}</span>
+                        position: 'absolute', top: '5px', right: '5px', 
+                        background: 'rgba(0,0,0,0.6)', borderRadius:'50%', padding:'4px'
+                    }}>
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/1/19/Spotify_logo_without_text.svg" alt="Spotify" width="16" />
                     </div>
                 )}
               </div>
               <div className="music-info">
                 <h3 className="music-title" title={m.title}>{m.title}</h3>
                 <p className="music-artist text-muted" title={m.artist}>{m.artist}</p>
-                {m.source === 'spotify' && <span style={{fontSize: '10px', color: '#1DB954'}}>Spotify Preview</span>}
+                {m.source === 'spotify' && <span style={{fontSize: '10px', color: '#1DB954'}}>Spotify</span>}
               </div>
             </div>
           ))}
@@ -137,10 +153,11 @@ export default function Home({ socket }) {
   return (
     <div className="home-page stack">
       
-      {/* --- NAVBAR --- */}
       <nav className="home-navbar surface">
         <div className="nav-left">
-            <h1 className="nav-logo">Moodify</h1>
+            <Link to="/" style={{textDecoration:'none', color:'inherit'}}>
+                <h1 className="nav-logo" style={{cursor:'pointer'}}>Moodify</h1>
+            </Link>
         </div>
 
         <div className="nav-center">
@@ -155,11 +172,14 @@ export default function Home({ socket }) {
 
         <div className="nav-right">
             {isLoggedIn ? (
+                // ✅ IF LOGGED IN: Show Name + Dashboard + Logout
                 <div className="nav-user">
-                    <span className="user-greeting">Hi, User</span>
+                    <span className="user-greeting" style={{marginRight:'10px', fontWeight:'bold'}}>Hi, {username}</span>
                     <button onClick={() => navigate('/artist/dashboard')} className="btn btn-small">Dashboard</button>
+                    <button onClick={handleLogout} className="btn btn-small" style={{marginLeft:'10px', background:'transparent', border:'1px solid #444'}}>Logout</button>
                 </div>
             ) : (
+                // ❌ IF NOT LOGGED IN: Show Login/Register
                 <div className="nav-actions">
                     <Link to="/login" className="btn btn-ghost">Login</Link>
                     <Link to="/register" className="btn btn-primary">Register</Link>
@@ -168,7 +188,7 @@ export default function Home({ socket }) {
         </div>
       </nav>
 
-      {/* --- CONTENT --- */}
+      {/* ... Content Section remains the same ... */}
       <div className="home-content stack" style={{ gap: 'var(--space-8)' }}>
         
         {/* Playlists */}
@@ -179,7 +199,7 @@ export default function Home({ socket }) {
                 </div>
                 <div className="playlist-grid">
                     {playlists.map(p => (
-                    <div key={p.id} className="playlist-card surface" tabIndex={0}>
+                    <div key={p.id} className="playlist-card surface" tabIndex={0} onClick={() => handlePlaylistClick(p.id)}>
                         <div className="playlist-info">
                         <h3 className="playlist-title" title={p.title}>{p.title}</h3>
                         <p className="playlist-meta text-muted">{p.count} tracks</p>
@@ -190,8 +210,7 @@ export default function Home({ socket }) {
             </section>
         )}
 
-        {/* Combined Sections (Local + Spotify) */}
-        
+        {/* Combined Sections */}
         {(selectedFilter === 'all' || selectedFilter === 'neutral') && 
             <>
                 <MusicSection title="Neutral Vibes (Community)" items={musics.filter(m => m.mood === 'neutral')} />

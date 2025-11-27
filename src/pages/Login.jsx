@@ -5,90 +5,79 @@ import { useNavigate } from 'react-router-dom'
 
 export default function Login() {
     const navigate = useNavigate();
-
-    // 1. Define Base URL (uses .env value if available, otherwise localhost)
     const AUTH_URL = import.meta.env.VITE_AUTH_URL || 'http://localhost:3000';
 
-    const [ form, setForm ] = useState({
-        email: '',
-        password: '',
-    })
+    const [ form, setForm ] = useState({ email: '', password: '' })
+    
+    // 1. Error State
+    const [error, setError] = useState(null);
 
     function handleChange(e) {
         const { name, value } = e.target
         setForm(f => ({ ...f, [ name ]: value }))
+        // Clear error when user types
+        if(error) setError(null);
     }
 
-    function handleSubmit(e) {
+    async function handleSubmit(e) {
         e.preventDefault()
+        setError(null); // Clear previous errors
 
         try {
-            // 2. Use the dynamic AUTH_URL variable here
-            axios.post(`${AUTH_URL}/api/auth/login`, {
+            const res = await axios.post(`${AUTH_URL}/api/auth/login`, {
                 email: form.email,
                 password: form.password
             }, {
                 withCredentials: true
-            }).then(() => {
-                navigate('/');
-            })
+            });
+
+           
+            localStorage.setItem('user', JSON.stringify(res.data.user));
+
+            navigate('/');
 
         } catch (err) {
-            console.error("Error during login:", err);
+            console.error("Login Error:", err);
+            
+            // 3. Display the Backend Message
+            if (err.response && err.response.data && err.response.data.message) {
+                setError(err.response.data.message); // e.g. "User not found, please register"
+            } else {
+                setError("Login failed. Check server connection.");
+            }
         }
-
     }
 
     return (
         <div className="login-wrapper">
             <div className="login-card surface">
                 <h2 className="login-title">Welcome back</h2>
-                <p className="text-muted" style={{ marginTop: 'var(--space-1)' }}>Sign in to continue</p>
+                
+                {error && (
+                    <div style={{
+                        background: 'rgba(255, 0, 0, 0.1)', 
+                        border: '1px solid #ff4d4d', 
+                        color: '#ff4d4d', 
+                        padding: '10px', 
+                        borderRadius: '8px',
+                        marginBottom: '15px',
+                        textAlign: 'center'
+                    }}>
+                        {error}
+                    </div>
+                )}
 
-                <button 
-                onClick={()=>{
-                    // 3. Update Google Login redirect to use the dynamic URL
-                    window.location.href = `${AUTH_URL}/api/auth/google`;
-                }}
-                type="button" className="btn btn-google" aria-label="Continue with Google">
-                    <span className="btn-google-icon" aria-hidden>G</span>
-                    Continue with Google
-                </button>
-
-                <div className="divider" role="separator" aria-label="or continue with email">
-                    <span className="divider-line" />
-                    <span className="divider-text">or</span>
-                    <span className="divider-line" />
-                </div>
-
+                {/* ... rest of your buttons and form ... */}
                 <form className="login-form stack" onSubmit={handleSubmit} noValidate>
                     <div className="field-group">
                         <label htmlFor="login-email">Email</label>
-                        <input
-                            id="login-email"
-                            name="email"
-                            type="email"
-                            autoComplete="email"
-                            value={form.email}
-                            onChange={handleChange}
-                            required
-                            placeholder="you@example.com"
-                        />
+                        <input id="login-email" name="email" type="email" value={form.email} onChange={handleChange} required />
                     </div>
                     <div className="field-group">
                         <label htmlFor="login-password">Password</label>
-                        <input
-                            id="login-password"
-                            name="password"
-                            type="password"
-                            autoComplete="current-password"
-                            value={form.password}
-                            onChange={handleChange}
-                            required
-                            placeholder="••••••••"
-                        />
+                        <input id="login-password" name="password" type="password" value={form.password} onChange={handleChange} required />
                     </div>
-                    <button type="submit" className="btn btn-primary" aria-label="Sign in">Sign in</button>
+                    <button type="submit" className="btn btn-primary">Sign in</button>
                 </form>
             </div>
         </div>

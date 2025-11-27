@@ -7,6 +7,7 @@ import Login from './pages/Login'
 import ArtistDashboard from './pages/artist/ArtistDashboard';
 import UploadMusic from './pages/artist/UploadMusic';
 import MusicPlayer from './pages/music/MusicPlayer';
+import PlaylistDetails from './pages/music/PlaylistDetails';
 import { io } from 'socket.io-client'
 
 
@@ -49,6 +50,7 @@ function App() {
           <Route path="/artist/dashboard" element={<ArtistDashboard />} />
           <Route path="/artist/dashboard/upload-music" element={<UploadMusic />} />
           <Route path="/music/:id" element={<MusicPlayer />} />
+          <Route path="/playlist/:id" element={<PlaylistDetails />} />
         </Routes>
       </main>
     </div>
